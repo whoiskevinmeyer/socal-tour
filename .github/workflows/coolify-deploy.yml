@@ -15,4 +15,4 @@ jobs:
           script: |
             set -euo pipefail
             curl -fsS -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" \
-              "http://127.0.0.1:8000/api/v1/deploy?uuid={{APP_UUID}}&force=true"
+              "http://127.0.0.1:8000/api/v1/deploy?uuid=jwf277tfp5ney2rinvzqt3kz&force=true"
