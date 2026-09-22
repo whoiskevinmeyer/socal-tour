@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="theme-color" content="#f5f5f7"/>
+<meta name="color-scheme" content="light"/>
+<title>SoCal Tour San Diego / Los Angeles</title>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet"/>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<style>
+:root {
+  --bg: #f5f5f7;
+  --surface: #ffffff;
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --faint: #86868b;
+  --line: rgba(0,0,0,.08);
+  --line-strong: rgba(0,0,0,.12);
+  --accent: #0071e3;
+  --accent-hover: #0077ed;
+  --good: #34c759;
+  --good-soft: rgba(52,199,89,.12);
+  --radius: 18px;
+  --radius-sm: 12px;
+  --nav-h: 48px;
+  --shadow: 0 2px 12px rgba(0,0,0,.06);
+  --shadow-lift: 0 8px 28px rgba(0,0,0,.08);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --measure: min(980px, calc(100% - 2.5rem));
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-h) + 16px); }
+body {
+  margin: 0;
+  font: 17px/1.47 var(--font);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+::selection { background: rgba(0,113,227,.18); color: var(--text); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+img { max-width: 100%; display: block; }
+.wrap { width: var(--measure); margin-inline: auto; }
+
+/* —— Sticky nav (no-overlap HARD) —— */
+.toc {
+  position: sticky; top: 0; z-index: 50;
+  min-height: var(--nav-h);
+  height: auto;
+  display: flex; align-items: center;
+  background: rgba(245,245,247,.92);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--line);
+}
+.toc-inner {
+  width: min(980px, calc(100% - 1.25rem));
+  margin: 0 auto;
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: .35rem .4rem;
+  padding: .45rem 0;
+  /* never single-line overflow/clip that stacks labels on each other */
+  overflow: visible;
+}
+.toc-brand {
+  display: inline-flex; align-items: center; gap: .55rem;
+  font-weight: 600; font-size: .88rem;
+  color: var(--text); white-space: nowrap;
+  margin-right: .35rem; letter-spacing: -0.01em;
+  text-decoration: none;
+  flex: 0 0 auto;
+  z-index: 1;
+}
+.toc-brand:hover { text-decoration: none; color: var(--text); }
+.toc-brand img {
+  height: 28px; width: auto; display: block;
+  object-fit: contain;
+}
+.toc-toggle {
+  display: none;
+  margin-left: auto;
+  flex: 0 0 auto;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 980px;
+  padding: .45rem .9rem;
+  font: 600 .82rem var(--font);
+  cursor: pointer;
+  z-index: 2;
+}
+.toc-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.toc-links {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: .3rem .25rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+@media (max-width: 820px) {
+  .toc-toggle { display: inline-flex; align-items: center; }
+  .toc-links {
+    display: none;
+    flex: 1 1 100%;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    padding: .45rem 0 .35rem;
+    border-top: 1px solid var(--line);
+    margin-top: .15rem;
+    gap: .2rem;
+  }
+  .toc.is-open .toc-links {
+    display: flex;
+  }
+  .toc-links a.nav {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: .92rem;
+    padding: .7rem .85rem;
+    border-radius: 12px;
+    background: rgba(0,0,0,.04);
+  }
+}
+@media (min-width: 821px) and (max-width: 1100px) {
+  /* tablet: pills wrap to second row instead of overlapping */
+  .toc-links { flex: 1 1 100%; }
+}
+.client-logo-hero {
+  height: clamp(28px, 4.5vw, 40px);
+  width: auto;
+  margin: 0 0 1rem;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 10px rgba(0,0,0,.45));
+  background: rgba(255,255,255,.92);
+  border-radius: 10px;
+  padding: .35rem .7rem;
+}
+.client-lock {
+  display: flex; align-items: center; gap: .85rem;
+  margin: 1.5rem 0 0;
+  padding: 1rem 1.15rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  max-width: 28rem;
+}
+.client-lock img {
+  height: 40px; width: auto; object-fit: contain; flex: 0 0 auto;
+}
+.client-lock .meta { min-width: 0; }
+.client-lock .meta .name {
+  font-weight: 600; font-size: .95rem; letter-spacing: -0.015em; color: var(--text);
+}
+.client-lock .meta .sub {
+  margin-top: .15rem; font-size: .82rem; color: var(--muted);
+}
+.client-lock a { color: var(--accent); font-weight: 500; }
+.toc a.nav {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: .78rem; font-weight: 500;
+  padding: .4rem .55rem; border-radius: 980px;
+  text-decoration: none; letter-spacing: -0.01em;
+}
+.toc a.nav:hover { color: var(--text); background: rgba(0,0,0,.04); text-decoration: none; }
+.toc a.nav[aria-current="true"] {
+  color: var(--text); background: rgba(0,0,0,.06); font-weight: 600;
+}
+
+/* —— Apple section type —— */
+.eyebrow {
+  margin: 0 0 .5rem;
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted);
+}
+.section-title {
+  margin: 0;
+  font-size: clamp(1.75rem, 3.6vw, 2.5rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: var(--text);
+}
+.section-dek {
+  margin: .65rem 0 0;
+  font-size: clamp(1.05rem, 1.6vw, 1.2rem);
+  line-height: 1.4;
+  color: var(--muted);
+  max-width: 38rem;
+  font-weight: 400;
+}
+.sec-head { margin-bottom: 2.25rem; max-width: 42rem; }
+.sec-head .eyebrow { margin-bottom: .65rem; }
+
+/* —— Hero —— */
+.hero {
+  position: relative;
+  min-height: min(72vh, 640px);
+  display: grid; align-items: end;
+  overflow: hidden;
+  background: #000;
+}
+.hero-media {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(0,0,0,.35) 42%, rgba(0,0,0,.78) 100%),
+    url('img/hero.jpg') center/cover no-repeat;
+}
+.hero-body {
+  position: relative; z-index: 1;
+  padding: clamp(5rem, 12vw, 7.5rem) 0 clamp(2.5rem, 5vw, 3.5rem);
+  color: #f5f5f7;
+}
+.hero .eyebrow { color: rgba(245,245,247,.72); }
+.hero .section-title {
+  color: #fff;
+  font-size: clamp(2.05rem, 4.6vw, 3.35rem);
+  max-width: 16ch;
+  letter-spacing: -0.03em;
+}
+.hero .section-dek {
+  color: rgba(245,245,247,.78);
+  max-width: 34rem;
+  font-size: clamp(1.1rem, 2vw, 1.3rem);
+}
+.pills {
+  display: flex; flex-wrap: wrap; gap: .5rem;
+  margin-top: 1.5rem;
+}
+.pill {
+  display: inline-flex; align-items: center; gap: .35rem;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.08);
+  backdrop-filter: blur(8px);
+  border-radius: 980px;
+  padding: .4rem .85rem;
+  font-size: .82rem; color: rgba(245,245,247,.85);
+}
+.pill b { color: #fff; font-weight: 600; }
+.pill.ok {
+  border-color: rgba(52,199,89,.45);
+  background: rgba(52,199,89,.15);
+  color: #a8f0b8;
+}
+.pill.ok b { color: #c8f7d1; }
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .75rem;
+  margin-top: 1.75rem;
+}
+@media (max-width: 800px) { .facts { grid-template-columns: 1fr 1fr; } }
+.fact {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: var(--radius-sm);
+  padding: .9rem 1rem;
+  backdrop-filter: blur(10px);
+}
+.fact .lbl {
+  display: block;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: rgba(245,245,247,.55);
+  margin-bottom: .3rem;
+}
+.fact .val {
+  font-size: 1.05rem; font-weight: 600;
+  letter-spacing: -0.015em; color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+/* —— Sections —— */
+section.block {
+  padding: clamp(3.5rem, 7vw, 6rem) 0 0;
+}
+.band {
+  background: var(--bg);
+}
+.band-alt {
+  background: #fff;
+  margin-top: clamp(3rem, 6vw, 5rem);
+  padding-block: clamp(3.5rem, 7vw, 6rem);
+  border-block: 1px solid var(--line);
+}
+/* Place sections: breathing room between eyebrow blocks and prior card rows */
+.band-alt .wrap > section.block {
+  padding-top: clamp(2.75rem, 5.5vw, 4.5rem);
+  padding-bottom: .15rem;
+}
+.band-alt .wrap > section.block:first-of-type {
+  padding-top: 1.35rem;
+}
+
+/* Stay card */
+.stay-card {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.stay-card + .stay-card { margin-top: 2rem; }
+@media (max-width: 860px) { .stay-card { grid-template-columns: 1fr; } }
+.stay-gallery {
+  display: grid;
+  grid-template-rows: 1.45fr 1fr;
+  gap: 3px;
+  min-height: 340px;
+  background: #e8e8ed;
+}
+.stay-gallery img { width: 100%; height: 100%; object-fit: cover; }
+.stay-gallery .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.stay-body {
+  padding: clamp(1.4rem, 3vw, 2rem);
+  display: flex; flex-direction: column; gap: .55rem;
+}
+.stay-body .tag {
+  align-self: flex-start;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: #248a3d;
+  background: var(--good-soft);
+  border-radius: 980px;
+  padding: .35rem .7rem;
+}
+.stay-body h3 {
+  margin: 0;
+  font-size: clamp(1.45rem, 2.4vw, 1.85rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+.stay-body .addr { color: var(--muted); font-size: .95rem; margin: 0; }
+.stay-body .why { color: var(--text); margin: .2rem 0 .5rem; font-size: 1rem; }
+.rate-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .9rem;
+  margin: .35rem 0;
+}
+.rate-table td {
+  padding: .45rem 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+.rate-table td:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+}
+.rate-table tr:last-child td {
+  border-bottom: 0;
+  color: var(--text);
+  font-size: 1.05rem;
+  padding-top: .65rem;
+}
+.stay-meta {
+  color: var(--faint);
+  font-size: .82rem;
+  margin: 0;
+}
+.stay-actions {
+  display: flex; flex-wrap: wrap; gap: .55rem;
+  margin-top: auto; padding-top: 1rem;
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 980px;
+  padding: .65rem 1.2rem;
+  font: 600 .9rem/1 var(--font);
+  border: none;
+  cursor: pointer;
+  text-decoration: none !important;
+  transition: background .15s ease, transform .15s ease;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-ghost {
+  background: rgba(0,0,0,.05);
+  color: var(--text);
+}
+.btn-ghost:hover { background: rgba(0,0,0,.08); }
+
+/* Map */
+.map-shell {
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+#map-canvas { height: min(520px, 62vh); width: 100%; }
+.map-note {
+  padding: .75rem 1.1rem;
+  border-top: 1px solid var(--line);
+  color: var(--faint);
+  font-size: .8rem;
+  display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  background: var(--surface);
+}
+.maplibregl-ctrl-attrib {
+  font-size: 10px !important;
+  background: rgba(255,255,255,.88) !important;
+  color: var(--faint) !important;
+  max-width: 55%;
+}
+.maplibregl-ctrl-logo { opacity: .5; transform: scale(.85); transform-origin: left bottom; }
+.maplibregl-popup-content {
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 12px;
+  padding: .75rem .9rem;
+  font: 13px/1.4 var(--font);
+  box-shadow: var(--shadow-lift);
+  border: 1px solid var(--line);
+}
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: var(--surface); }
+.maplibregl-popup-close-button { color: var(--muted); font-size: 16px; }
+.marker-dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.15), 0 2px 6px rgba(0,0,0,.2);
+  cursor: pointer;
+}
+.marker-wrap {
+  display: flex; align-items: center; gap: 6px;
+  transform: translate(8px, -50%);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.marker-wrap .marker-dot { flex: 0 0 auto; }
+.marker-name {
+  background: #fff;
+  color: #1d1d1f;
+  font: 600 11px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: 3px 7px;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.18);
+  border: 1px solid rgba(0,0,0,.08);
+}
+
+/* Filters */
+.toolbar {
+  display: flex; flex-wrap: wrap; gap: .55rem; align-items: center;
+  margin: 0 0 1.25rem;
+  padding: .85rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+.toolbar input, .toolbar select {
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  color: var(--text);
+  border-radius: 980px;
+  padding: .55rem .95rem;
+  font: 500 .9rem var(--font);
+}
+.toolbar input { min-width: 14rem; flex: 1; }
+.toolbar input:focus, .toolbar select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,113,227,.15);
+}
+.count { color: var(--faint); font-size: .82rem; margin-left: auto; font-variant-numeric: tabular-nums; }
+
+/* Cards */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 2rem;
+  row-gap: 2.25rem;
+  padding: .35rem 0 1.75rem;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: var(--shadow);
+  transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+  cursor: pointer;
+}
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lift);
+  border-color: var(--line-strong);
+}
+.card .media {
+  aspect-ratio: 16/10;
+  background: #e8e8ed;
+  overflow: hidden;
+}
+.card .media img { width: 100%; height: 100%; object-fit: cover; }
+.card .body {
+  padding: 1rem 1.05rem 1.15rem;
+  display: flex; flex-direction: column; gap: .28rem; flex: 1;
+}
+.card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+.card .meta { color: var(--faint); font-size: .82rem; }
+.card .cap { color: var(--muted); font-size: .9rem; }
+.card .foot {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: auto; padding-top: .65rem; gap: .5rem;
+}
+.rating {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+  font-size: .95rem;
+}
+.rating::before {
+  content: "★ ";
+  color: var(--accent);
+  font-weight: 500;
+}
+.card .links { display: flex; gap: .65rem; font-size: .8rem; font-weight: 600; }
+
+/* Plan / ground */
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+@media (max-width: 800px) { .plan-grid { grid-template-columns: 1fr; } }
+.plan {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.35rem 1.4rem;
+  box-shadow: var(--shadow);
+}
+.plan h3 {
+  font-size: 1.25rem; margin: 0 0 .15rem;
+  font-weight: 600; letter-spacing: -0.02em;
+}
+.plan .when {
+  color: var(--accent);
+  font-size: 12px; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase;
+  margin: 0 0 .7rem;
+}
+.plan ul { margin: 0; padding-left: 1.15rem; color: var(--muted); }
+.plan li { margin: .4rem 0; }
+.plan li strong { color: var(--text); font-weight: 600; }
+
+.ground {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 720px) { .ground { grid-template-columns: 1fr; } }
+.ground .box {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.35rem 1.4rem;
+  box-shadow: var(--shadow);
+}
+.ground h3 {
+  margin: 0 0 .55rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.ground p { margin: .4rem 0; color: var(--muted); font-size: .98rem; }
+.ground strong { color: var(--text); font-weight: 600; }
+
+footer {
+  margin-top: clamp(3rem, 6vw, 5rem);
+  padding: 1.75rem 0 2.75rem;
+  border-top: 1px solid var(--line);
+  color: var(--faint);
+  font-size: .78rem;
+}
+.empty { color: var(--muted); padding: 1.25rem 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .card { transition: none; }
+  .card:hover { transform: none; }
+}
+</style>
+</head>
+
+<body>
+
+<nav class="toc" id="toc" aria-label="Page sections">
+  <div class="toc-inner">
+    <a class="toc-brand" href="https://us-wholesale.polymaker.com/" target="_blank" rel="noopener" title="Polymaker Wholesale">
+      <img src="img/client-logo-nav.png" width="160" height="46" alt="Polymaker Wholesale"/>
+    </a>
+    <button type="button" class="toc-toggle" id="toc-toggle" aria-expanded="false" aria-controls="toc-links" aria-label="Open section menu">Menu</button>
+    <div class="toc-links" id="toc-links">
+      <a class="nav" href="#overview">Overview</a>
+      <a class="nav" href="#map">Map</a>
+      <a class="nav" href="#sandiego">San Diego</a>
+      <a class="nav" href="#northcounty">Carlsbad</a>
+      <a class="nav" href="#oc">Orange County</a>
+      <a class="nav" href="#la">Los Angeles</a>
+      <a class="nav" href="#plan">Plan</a>
+      <a class="nav" href="#ground">Fly</a>
+      <a class="nav" href="#stay">Stay</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="overview">
+  <div class="hero-media" role="presentation"></div>
+  <div class="hero-body wrap">
+    <img class="client-logo-hero" src="img/client-logo.png" width="220" height="62" alt="Polymaker Wholesale"/>
+    <p class="eyebrow">Polymaker Wholesale</p>
+    <h1 class="section-title">SoCal Tour San Diego / Los Angeles</h1>
+    <p class="section-dek">Current wholesale accounts worth a visit, plus a few prospects that are not buying. Numbers are Shopify wholesale paid orders in the last 12 months versus the prior 12 months. Small accounts are off this page.</p>
+    <div class="pills">
+      <span class="pill ok"><b>Anchor</b> Incept 3D · $113k</span>
+      <span class="pill"><b>Fly</b> SAN</span>
+      <span class="pill"><b>Days</b> 3</span>
+      <span class="pill"><b>L12</b> $171,204 on the list</span>
+    </div>
+    <div class="facts">
+      <div class="fact"><span class="lbl">Fly into</span><span class="val">SAN</span></div>
+      <div class="fact"><span class="lbl">San Diego hub</span><span class="val">UTC / Sorrento Valley</span></div>
+      <div class="fact"><span class="lbl">Second hub</span><span class="val">Burbank</span></div>
+      <div class="fact"><span class="lbl">Days</span><span class="val">3</span></div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section class="block wrap" id="map" aria-labelledby="map-h">
+    <div class="sec-head">
+      <p class="eyebrow">Proximity</p>
+      <h2 class="section-title" id="map-h">Map</h2>
+      <p class="section-dek">Pins stay in sync with the groups below. Red is the largest current account.</p>
+    </div>
+    <div class="map-shell">
+      <div id="map-canvas" role="region" aria-label="Customer tour map"></div>
+      <div class="map-note">
+        <span>Every stop is labeled. Prospects are included.</span>
+        <span id="map-count"></span>
+      </div>
+    </div>
+  </section>
+
+  <div class="band-alt">
+    <div class="wrap">
+      <div class="toolbar" role="search">
+        <input id="q" type="search" placeholder="Search customers…" autocomplete="off"/>
+        <select id="minRating" aria-label="Filter">
+          <option value="0">All groups</option>
+        </select>
+        <span class="count" id="global-count"></span>
+      </div>
+
+      <section class="block" id="sandiego" data-kind="sandiego" aria-labelledby="sandiego-h">
+        <div class="sec-head">
+          <p class="eyebrow">Anchor</p>
+          <h2 class="section-title" id="sandiego-h">San Diego / Sorrento Valley</h2>
+          <p class="section-dek">Incept 3D is the reason to fly SAN. QUALCOMM and UCSD are the same zip. Super Detail and TAKT 3D fit the same afternoon.</p>
+        </div>
+        <div class="cards" id="grid-sandiego"></div>
+      </section>
+      <section class="block" id="northcounty" data-kind="northcounty" aria-labelledby="northcounty-h">
+        <div class="sec-head">
+          <p class="eyebrow">North</p>
+          <h2 class="section-title" id="northcounty-h">Carlsbad</h2>
+          <p class="section-dek">ADDMAN / Forecast 3D. Industrial bureau, not currently buying. 40 minutes from Sorrento Valley.</p>
+        </div>
+        <div class="cards" id="grid-northcounty"></div>
+      </section>
+      <section class="block" id="oc" data-kind="oc" aria-labelledby="oc-h">
+        <div class="sec-head">
+          <p class="eyebrow">Orange County</p>
+          <h2 class="section-title" id="oc-h">OC pack</h2>
+          <p class="section-dek">SNL Creative, MatterHackers showroom, P6 GEAR. Scotts in Temecula if the day has room.</p>
+        </div>
+        <div class="cards" id="grid-oc"></div>
+      </section>
+      <section class="block" id="la" data-kind="la" aria-labelledby="la-h">
+        <div class="sec-head">
+          <p class="eyebrow">Los Angeles</p>
+          <h2 class="section-title" id="la-h">LA / Burbank pack</h2>
+          <p class="section-dek">Brighton Cutters is the dollar stop. UCLA and MAKEiT are east. Titan Dynamics is South Bay.</p>
+        </div>
+        <div class="cards" id="grid-la"></div>
+      </section>
+    </div>
+  </div>
+
+  <section class="block wrap" id="plan" aria-labelledby="plan-h">
+    <div class="sec-head">
+      <p class="eyebrow">Itinerary</p>
+      <h2 class="section-title" id="plan-h">Suggested days</h2>
+      <p class="section-dek">Not booked. Hotels and flights come later.</p>
+    </div>
+    <div class="plan-grid">
+      <div class="plan">
+        <p class="when">Day 1</p>
+        <h3>SAN · Sorrento Valley</h3>
+        <ul>
+          <li>Land SAN, stay UTC / Sorrento Valley</li>
+          <li>Incept 3D (anchor) · QUALCOMM · UC San Diego Trade St</li>
+          <li>Super Detail on Kurtz if time</li>
+        </ul>
+      </div>
+      <div class="plan">
+        <p class="when">Day 2</p>
+        <h3>North County + OC</h3>
+        <ul>
+          <li>ADDMAN Carlsbad in the morning</li>
+          <li>MatterHackers Lake Forest · SNL Cypress · P6 GEAR Huntington</li>
+          <li>Night Irvine or keep the car and sleep Burbank</li>
+        </ul>
+      </div>
+      <div class="plan">
+        <p class="when">Day 3</p>
+        <h3>Los Angeles</h3>
+        <ul>
+          <li>Titan Dynamics Torrance if you come up the 405</li>
+          <li>Brighton Cutters Burbank</li>
+          <li>UCLA + MAKEiT Alhambra</li>
+          <li>Fly home SAN or BUR</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="ground" aria-labelledby="ground-h">
+    <div class="sec-head">
+      <p class="eyebrow">Air</p>
+      <h2 class="section-title" id="ground-h">Where to fly</h2>
+      <p class="section-dek">Rough only. Confirm flights in the next pass.</p>
+    </div>
+    <div class="plan-grid">
+      <div class="plan">
+        <p class="when">Primary</p>
+        <h3>SAN</h3>
+        <ul>
+          <li>Best for Incept and QUALCOMM</li>
+          <li>3 days if you add OC and LA</li>
+          <li>Rental car required</li>
+        </ul>
+      </div>
+      <div class="plan">
+        <p class="when">Split</p>
+        <h3>SAN then BUR</h3>
+        <ul>
+          <li>Use BUR if Day 3 is only Burbank / UCLA</li>
+          <li>Drop the car at BUR</li>
+        </ul>
+      </div>
+      <div class="plan">
+        <p class="when">Skip as primary</p>
+        <h3>LAX</h3>
+        <ul>
+          <li>Adds 2 hours to Incept</li>
+          <li>Only if BUR and SAN are ugly</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="stay" aria-labelledby="stay-h">
+    <div class="sec-head">
+      <p class="eyebrow">Stay</p>
+      <h2 class="section-title" id="stay-h">Where to stay</h2>
+      <p class="section-dek">Areas only. Not booked. No hotel holds yet.</p>
+    </div>
+    <article class="stay-card">
+      <div class="stay-gallery">
+        <img src="img/hero.jpg" alt="" width="800" height="500"/>
+      </div>
+      <div class="stay-body">
+        <span class="tag">Suggested · not booked</span>
+        <h3>UTC / Sorrento Valley</h3>
+        <p class="addr">San Diego 92122 · next to Incept and QUALCOMM</p>
+        <p class="why">One hotel for Day 1. Drive to Carlsbad the next morning.</p>
+      </div>
+    </article>
+    <article class="stay-card">
+      <div class="stay-gallery">
+        <img src="img/hero.jpg" alt="" width="800" height="500"/>
+      </div>
+      <div class="stay-body">
+        <span class="tag">Suggested · OC night</span>
+        <h3>Irvine / Costa Mesa</h3>
+        <p class="addr">Orange County · 20–35 min to SNL and MatterHackers</p>
+        <p class="why">Use if you do not want to drive Sorrento Valley to Burbank in one shot.</p>
+      </div>
+    </article>
+    <article class="stay-card">
+      <div class="stay-gallery">
+        <img src="img/hero.jpg" alt="" width="800" height="500"/>
+      </div>
+      <div class="stay-body">
+        <span class="tag">Suggested · LA night</span>
+        <h3>Burbank</h3>
+        <p class="addr">Next to Brighton Cutters. BUR in the morning.</p>
+        <p class="why">Skip if you finish LA and fly SAN the same night.</p>
+      </div>
+    </article>
+  </section>
+
+</main>
+<footer class="wrap" style="padding:2.5rem 0 3.5rem;color:var(--muted);font-size:.85rem">Shopify wholesale paid orders, last 12 months vs prior 12 months. Snapshot 22 Sep 2026. Prospects have no L12. Hero: San Diego, Wikimedia.</footer>
+<script>
+const PLACES = [{"id": "incept", "kind": "sandiego", "name": "Incept 3D", "addr": "6915 Flanders Drive, San Diego CA 92121", "caption": "$112,893 last 12 mo vs $80,384 prior. Accelerating. Largest SoCal account. Sorrento Valley.", "rating": "", "l12": 112893, "rev": "$112,893", "lat": 32.9035317, "lon": -117.1742368, "color": "#ff3b30", "gmaps": "https://www.google.com/maps/search/?api=1&query=6915%20Flanders%20Drive%2C%20San%20Diego%20CA%2092121", "why": "Anchor", "img": "img/incept.jpg", "thumbs": [], "site": null, "label": "San Diego", "domId": "incept", "shopify": "https://admin.shopify.com/store/polymaker-us-wholesale/companies/689078374?selectedView=all"}, {"id": "qualcomm", "kind": "sandiego", "name": "QUALCOMM", "addr": "10350 Sorrento Valley Road, San Diego CA 92121", "caption": "$3,000 last 12 mo · new (no prior-year orders). Campus is next door to Incept. Small dollars, huge account.", "rating": "", "l12": 3000, "rev": "$3,000", "lat": 32.8906187, "lon": -117.2117041, "color": "#0071e3", "gmaps": "https://www.google.com/maps/search/?api=1&query=10350%20Sorrento%20Valley%20Road%2C%20San%20Diego%20CA%2092121", "why": "Opportunity", "img": "img/qualcomm.jpg", "thumbs": [], "site": null, "label": "San Diego", "domId": "qualcomm", "shopify": "https://admin.shopify.com/store/polymaker-us-wholesale/companies/1605861478?selectedView=all"}, {"id": "ucsd", "kind": "sandiego", "name": "UC San Diego", "addr": "7835 Trade Street, San Diego CA 92121", "caption": "$7,699 last 12 mo · new (no prior-year orders). Trade Street lab, not the main campus.", "rating": "", "l12": 7699, "rev": "$7,699", "lat": 32.8890183, "lon": -117.1531103, "color": "#0071e3", "gmaps": "https://www.google.com/maps/search/?api=1&query=7835%20Trade%20Street%2C%20San%20Diego%20CA%2092121", "why": "New", "img": "img/ucsd.jpg", "thumbs": [], "site": null, "label": "San Diego", "domId": "ucsd", "shopify": "https://admin.shopify.com/store/polymaker-us-wholesale/customers/9037253345382"}, {"id": "superdetail", "kind": "sandiego", "name": "Super Detail, Inc", "addr": "3450 Kurtz Street, San Diego CA 92110", "caption": "$2,964 last 12 mo · new (no prior-year orders). Midway district. Same day as Incept.", "rating": "", "l12": 2964, "rev": "$2,964", "lat": 32.7554588, "lon": -117.2088328, "color": "#0071e3", "gmaps": "https://www.google.com/maps/search/?api=1&query=3450%20Kurtz%20Street%2C%20San%20Diego%20CA%2092110", "why": "New", "img": "img/superdetail.jpg", "thumbs": [], "site": null, "label": "San Diego", "domId": "superdetail", "shopify": "https://admin.shopify.com/store/polymaker-us-wholesale/companies/1230635110?selectedView=all"}, {"id": "takt", "kind": "sandiego", "name": "TAKT 3D", "addr": "7940 Silverton Ave #216, San Diego CA 92126", "caption": "Local Mira Mesa print farm. Not a current wholesale buyer.", "rating": "", "l12": 0, "rev": "Prospect", "lat": 32.8909652, "lon": -117.15185, "color": "#0071e3", "gmaps": "https://www.google.com/maps/search/?api=1&query=7940%20Silverton%20Ave%20%23216%2C%20San%20Diego%20CA%2092126", "why": "Prospect", "img": "img/takt.jpg", "thumbs": [], "site": "https://takt3d.io/", "label": "San Diego", "domId": "takt", "shopify": ""}, {"id": "addman", "kind": "northcounty", "name": "Forecast 3D / ADDMAN", "addr": "2221 Rutherford Road, Carlsbad CA 92008", "caption": "Industrial AM bureau. 60+ printers. Not on wholesale L12.", "rating": "", "l12": 0, "rev": "Prospect", "lat": 33.1311142, "lon": -117.2797441, "color": "#34c759", "gmaps": "https://www.google.com/maps/search/?api=1&query=2221%20Rutherford%20Road%2C%20Carlsbad%20CA%2092008", "why": "Prospect", "img": "img/addman.jpg", "thumbs": [], "site": "https://www.addmangroup.com/carlsbad-facility/", "label": "North County", "domId": "addman", "shopify": ""}, {"id": "snl", "kind": "oc", "name": "SNL Creative", "addr": "11235 Knott Ave Suite A, Cypress CA 90630", "caption": "$3,366 last 12 mo · new (no prior-year orders). ISO bureau with a Bambu farm. Disney / Oakley work.", "rating": "", "l12": 3366, "rev": "$3,366", "lat": 33.7998067, "lon": -118.0116704, "color": "#af52de", "gmaps": "https://www.google.com/maps/search/?api=1&query=11235%20Knott%20Ave%20Suite%20A%2C%20Cypress%20CA%2090630", "why": "New", "img": "img/snl.jpg", "thumbs": [], "site": null, "label": "Orange County", "domId": "snl", "shopify": "https://admin.shopify.com/store/polymaker-us-wholesale/companies/2163310694?selectedView=all"}, {"id": "matterhackers", "kind": "oc", "name": "MatterHackers", "addr": "20321 Valencia Circle, Lake Forest CA 92630", "caption": "Biggest US filament retailer with a showroom. Shopify company on file, $0 last 12 mo.", "rating": "", "l12": 0, "rev": "Prospect", "lat": 33.6670186, "lon": -117.6615865, "color": "#af52de", "gmaps": "https://www.google.com/maps/search/?api=1&query=20321%20Valencia%20Circle%2C%20Lake%20Forest%20CA%2092630", "why": "Prospect", "img": "img/matterhackers.jpg", "thumbs": [], "site": "https://www.matterhackers.com/", "label": "Orange County", "domId": "matterhackers", "shopify": "https://admin.shopify.com/store/polymaker-us-wholesale/companies/1902346342?selectedView=all"}, {"id": "p6gear", "kind": "oc", "name": "P6 GEAR", "addr": "305 22nd Street, Huntington Beach CA 92648", "caption": "$3,152 last 12 mo vs $7,105 prior. Declining. Down vs prior year. Same OC day.", "rating": "", "l12": 3152, "rev": "$3,152", "lat": 33.669567, "lon": -118.0147534, "color": "#af52de", "gmaps": "https://www.google.com/maps/search/?api=1&query=305%2022nd%20Street%2C%20Huntington%20Beach%20CA%2092648", "why": "Declining", "img": "img/p6gear.jpg", "thumbs": [], "site": null, "label": "Orange County", "domId": "p6gear", "shopify": "https://admin.shopify.com/store/polymaker-us-wholesale/companies/1031405670?selectedView=all"}, {"id": "scotts", "kind": "oc", "name": "The Scotts Company", "addr": "42375 Remington Avenue, Temecula CA 92590", "caption": "$2,882 last 12 mo · new (no prior-year orders). Corporate account. Temecula, south IE. Add if the OC day has room.", "rating": "", "l12": 2882, "rev": "$2,882", "lat": 33.5135692, "lon": -117.181721, "color": "#af52de", "gmaps": "https://www.google.com/maps/search/?api=1&query=42375%20Remington%20Avenue%2C%20Temecula%20CA%2092590", "why": "Opportunity", "img": "img/scotts.jpg", "thumbs": [], "site": null, "label": "Orange County", "domId": "scotts", "shopify": "https://admin.shopify.com/store/polymaker-us-wholesale/customers/9153732608102"}, {"id": "brighton", "kind": "la", "name": "Brighton Cutters", "addr": "2854 North Brighton Street, Burbank CA 91504", "caption": "$13,456 last 12 mo vs $1,236 prior. Accelerating. Best LA dollar stop. Entertainment fabrication.", "rating": "", "l12": 13456, "rev": "$13,456", "lat": 34.2074825, "lon": -118.3362974, "color": "#ff9500", "gmaps": "https://www.google.com/maps/search/?api=1&query=2854%20North%20Brighton%20Street%2C%20Burbank%20CA%2091504", "why": "Accelerating", "img": "img/brighton.jpg", "thumbs": [], "site": null, "label": "Los Angeles", "domId": "brighton", "shopify": "https://admin.shopify.com/store/polymaker-us-wholesale/companies/1680932966?selectedView=all"}, {"id": "titan", "kind": "la", "name": "Titan Dynamics", "addr": "660 Maple Avenue, Torrance CA 90503", "caption": "$7,709 last 12 mo · new (no prior-year orders). South Bay. Same LA day if you start in Torrance.", "rating": "", "l12": 7709, "rev": "$7,709", "lat": 33.840122, "lon": -118.3399622, "color": "#ff9500", "gmaps": "https://www.google.com/maps/search/?api=1&query=660%20Maple%20Avenue%2C%20Torrance%20CA%2090503", "why": "New", "img": "img/titan.jpg", "thumbs": [], "site": null, "label": "Los Angeles", "domId": "titan", "shopify": "https://admin.shopify.com/store/polymaker-us-wholesale/companies/1772650598?selectedView=all"}, {"id": "ucla", "kind": "la", "name": "UCLA", "addr": "420 Westwood Plaza, Eng 4 RM 14-108, Los Angeles CA 90095", "caption": "$7,230 last 12 mo vs $3,842 prior. Accelerating. Engineering model shop. Campus visit.", "rating": "", "l12": 7230, "rev": "$7,230", "lat": 34.0688304, "lon": -118.4439474, "color": "#ff9500", "gmaps": "https://www.google.com/maps/search/?api=1&query=420%20Westwood%20Plaza%2C%20Eng%204%20RM%2014-108%2C%20Los%20Angeles%20CA%2090095", "why": "Accelerating", "img": "img/ucla.jpg", "thumbs": [], "site": null, "label": "Los Angeles", "domId": "ucla", "shopify": "https://admin.shopify.com/store/polymaker-us-wholesale/companies/1031045222?selectedView=all"}, {"id": "makeit", "kind": "la", "name": "MAKEiT Inc", "addr": "612 S Marengo Ave, Alhambra CA 91803", "caption": "$6,853 last 12 mo · new (no prior-year orders). Storefront makerspace / reseller in the SGV.", "rating": "", "l12": 6853, "rev": "$6,853", "lat": 34.0835783, "lon": -118.1418288, "color": "#ff9500", "gmaps": "https://www.google.com/maps/search/?api=1&query=612%20S%20Marengo%20Ave%2C%20Alhambra%20CA%2091803", "why": "New", "img": "img/makeit.jpg", "thumbs": [], "site": null, "label": "Los Angeles", "domId": "makeit", "shopify": "https://admin.shopify.com/store/polymaker-us-wholesale/companies/1641021542?selectedView=all"}, {"id": "stay-sd", "kind": "hotel", "name": "UTC / Sorrento Valley", "addr": "University Town Center, San Diego CA", "caption": "Base for Incept, QUALCOMM, UCSD.", "rating": "", "l12": 0, "rev": "Stay", "lat": 32.868, "lon": -117.212, "color": "#86868b", "gmaps": "https://www.google.com/maps/search/?api=1&query=University%20Town%20Center%20San%20Diego", "why": "Stay", "img": "img/stay-sd.jpg", "thumbs": [], "site": null, "label": "Stay", "domId": "stay-sd", "shopify": ""}, {"id": "stay-oc", "kind": "hotel", "name": "Irvine / Costa Mesa", "addr": "Irvine CA", "caption": "Base for the Orange County day.", "rating": "", "l12": 0, "rev": "Stay", "lat": 33.6846, "lon": -117.8265, "color": "#86868b", "gmaps": "https://www.google.com/maps/search/?api=1&query=Irvine%20California%20hotels", "why": "Stay", "img": "img/stay-oc.jpg", "thumbs": [], "site": null, "label": "Stay", "domId": "stay-oc", "shopify": ""}, {"id": "san", "kind": "airport", "name": "SAN", "addr": "San Diego International", "caption": "Fly here for the San Diego days.", "rating": "", "l12": 0, "rev": "Fly", "lat": 32.7338, "lon": -117.1933, "color": "#8e8e93", "gmaps": "https://www.google.com/maps/search/?api=1&query=San%20Diego%20International%20Airport", "why": "Fly", "img": "img/san.jpg", "thumbs": [], "site": null, "label": "Airport", "domId": "san", "shopify": ""}];
+
+const KIND_GRID = {"sandiego": "grid-sandiego", "northcounty": "grid-northcounty", "oc": "grid-oc", "la": "grid-la"};
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => (
+  {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+));
+
+let map, markers = {};
+
+function numR(p) {
+  const n = parseFloat(p.rating);
+  return Number.isFinite(n) ? n : null;
+}
+
+function filtered(kind) {
+  const q = (document.getElementById('q').value || '').trim().toLowerCase();
+  return PLACES.filter(p => {
+    if (kind && p.kind !== kind) return false;
+    if (!kind && ['hotel','airport'].includes(p.kind)) return false;
+    if (q) {
+      const hay = `${p.name} ${p.addr||''} ${p.caption||''} ${p.why||''}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function cardHTML(p) {
+  const img = p.img
+    ? '<div class="media"><img src="' + esc(p.img) + '" alt="" loading="lazy"/></div>'
+    : '<div class="media" style="background:linear-gradient(135deg,' + esc(p.color||'#c7c7cc') + ',#e8e8ed)"></div>';
+  const links = [];
+  if (p.shopify) links.push('<a href="' + esc(p.shopify) + '" target="_blank" rel="noopener" data-stop>Shopify</a>');
+  if (p.gmaps) links.push('<a href="' + esc(p.gmaps) + '" target="_blank" rel="noopener" data-stop>Maps</a>');
+  if (p.site) links.push('<a href="' + esc(p.site) + '" target="_blank" rel="noopener" data-stop>Site</a>');
+  return '<article class="card" data-id="' + esc(p.id) + '" tabindex="0">' +
+    img +
+    '<div class="body">' +
+      '<h3>' + esc(p.name) + '</h3>' +
+      '<div class="meta">' + esc(p.addr||'') + '</div>' +
+      '<div class="cap">' + esc(p.caption || p.why || '') + '</div>' +
+      '<div class="foot">' +
+        '<span class="rating">' + esc(p.rev || '—') + '</span>' +
+        '<span class="links">' + links.join('') + '</span>' +
+      '</div>' +
+    '</div>' +
+  '</article>';
+}
+
+function renderGrids() {
+  let total = 0;
+  Object.entries(KIND_GRID).forEach(([kind, gid]) => {
+    const list = filtered(kind).sort((a,b) => (b.l12||0) - (a.l12||0) || a.name.localeCompare(b.name));
+    total += list.length;
+    const host = document.getElementById(gid);
+    if (!list.length) {
+      host.innerHTML = '<p class="empty">No matches for this filter.</p>';
+      return;
+    }
+    host.innerHTML = list.map(cardHTML).join('');
+    host.querySelectorAll('.card').forEach(el => {
+      const id = el.dataset.id;
+      const go = () => focusPlace(id);
+      el.addEventListener('click', e => {
+        if (e.target.closest('[data-stop]')) return;
+        go();
+      });
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
+      });
+    });
+  });
+  document.getElementById('global-count').textContent = `${total} shown`;
+  syncMap();
+}
+
+function focusPlace(id) {
+  const p = PLACES.find(x => x.id === id);
+  if (!p || p.lat == null) return;
+  map.flyTo({ center: [p.lon, p.lat], zoom: 12, essential: true });
+  const m = markers[id];
+  if (m) {
+    const popup = m.getPopup();
+    if (popup) m.togglePopup();
+  }
+}
+
+function popupHTML(p) {
+  const shop = p.shopify ? ('<br/><a href="' + esc(p.shopify) + '" target="_blank" rel="noopener">Shopify</a>') : '';
+  return '<strong>' + esc(p.name) + '</strong><br/>' +
+    esc(p.rev||'') + ' · ' + esc(p.caption||'') +
+    shop +
+    (p.gmaps ? ('<br/><a href="' + esc(p.gmaps) + '" target="_blank" rel="noopener">Open in Maps</a>') : '');
+}
+
+function initMap() {
+  map = new maplibregl.Map({
+    container: 'map-canvas',
+    style: 'https://tiles.openfreemap.org/styles/liberty',
+    center: [-117.4, 33.6],
+    zoom: 7.2,
+    attributionControl: true,
+  });
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+  map.on('load', () => { syncMap(); });
+  setTimeout(syncMap, 600);
+}
+
+function placesForMap() {
+  const q = (document.getElementById('q').value || '').trim().toLowerCase();
+  return PLACES.filter(p => {
+    if (p.lat == null || p.lon == null) return false;
+    if (q) {
+      const hay = `${p.name} ${p.addr||''} ${p.caption||''}`.toLowerCase();
+      if (!hay.includes(q) && !['hotel','office','airport'].includes(p.kind)) return false;
+    }
+    return true;
+  });
+}
+
+function syncMap() {
+  if (!map) return;
+  Object.values(markers).forEach(m => m.remove());
+  markers = {};
+  const list = placesForMap();
+  const bounds = new maplibregl.LngLatBounds();
+  list.forEach(p => {
+    const wrap = document.createElement('div');
+    wrap.className = 'marker-wrap';
+    const el = document.createElement('div');
+    el.className = 'marker-dot';
+    el.style.background = p.color || '#0071e3';
+    wrap.appendChild(el);
+    if (!['hotel','airport'].includes(p.kind)) {
+      const lab = document.createElement('span');
+      lab.className = 'marker-name';
+      lab.textContent = p.name;
+      wrap.appendChild(lab);
+    }
+    wrap.title = p.name;
+    const marker = new maplibregl.Marker({ element: wrap, anchor: 'left' })
+      .setLngLat([p.lon, p.lat])
+      .setPopup(new maplibregl.Popup({ offset: 12 }).setHTML(popupHTML(p)))
+      .addTo(map);
+    markers[p.id] = marker;
+    if (!['hotel','airport'].includes(p.kind)) bounds.extend([p.lon, p.lat]);
+  });
+  const customers = list.filter(p => !['hotel','airport'].includes(p.kind));
+  document.getElementById('map-count').textContent = `${customers.length} on the map`;
+  if (customers.length >= 2) {
+    try { map.fitBounds(bounds, { padding: 72, maxZoom: 6.6, duration: 0 }); } catch (_) {}
+  }
+}
+
+const sectionIds = ["overview", "map", "sandiego", "northcounty", "oc", "la", "plan", "ground", "stay"];
+const toc = document.getElementById('toc');
+const tocToggle = document.getElementById('toc-toggle');
+const navLinks = [...document.querySelectorAll('.toc a.nav')];
+const setNavH = () => {
+  const h = Math.ceil(toc.getBoundingClientRect().height) || 48;
+  document.documentElement.style.setProperty('--nav-h', h + 'px');
+};
+if (tocToggle) {
+  tocToggle.addEventListener('click', () => {
+    const open = toc.classList.toggle('is-open');
+    tocToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    tocToggle.setAttribute('aria-label', open ? 'Close section menu' : 'Open section menu');
+    tocToggle.textContent = open ? 'Close' : 'Menu';
+    requestAnimationFrame(setNavH);
+  });
+}
+navLinks.forEach(a => a.addEventListener('click', () => {
+  if (toc.classList.contains('is-open')) {
+    toc.classList.remove('is-open');
+    tocToggle.setAttribute('aria-expanded', 'false');
+    tocToggle.setAttribute('aria-label', 'Open section menu');
+    tocToggle.textContent = 'Menu';
+    requestAnimationFrame(setNavH);
+  }
+}));
+window.addEventListener('resize', setNavH);
+setNavH();
+
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(en => {
+    if (!en.isIntersecting) return;
+    const id = en.target.id;
+    navLinks.forEach(a => {
+      const on = a.getAttribute('href') === '#' + id;
+      a.setAttribute('aria-current', on ? 'true' : 'false');
+    });
+  });
+}, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
+sectionIds.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) io.observe(el);
+});
+
+document.getElementById('q').addEventListener('input', renderGrids);
+document.getElementById('minRating').addEventListener('change', renderGrids);
+
+initMap();
+renderGrids();
+</script>
+</body>
+</html>
